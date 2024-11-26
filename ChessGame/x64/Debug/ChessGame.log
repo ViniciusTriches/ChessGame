@@ -1,0 +1,4 @@
+﻿  ChessGame.cpp
+C:\Users\vinis\Downloads\ChessGame\ChessGame\ChessGame.cpp(209,17): warning C4101: 'r2': unreferenced local variable
+C:\Users\vinis\Downloads\ChessGame\ChessGame\ChessGame.cpp(209,21): warning C4101: 'c2': unreferenced local variable
+  ChessGame.vcxproj -> C:\Users\vinis\Downloads\ChessGame\x64\Debug\ChessGame.exe
