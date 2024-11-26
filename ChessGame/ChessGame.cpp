@@ -32,10 +32,9 @@ int pbstatus[8] = { 0 };
 // Funções principais
 void displayBoard();
 void logMovement(char piece, int startX, int startY, int endX, int endY);
-void logGameEnd();
+void logEndGame();
 void changePosition(int r1, int c1, int r2, int c2);
 void playerTurn(int player);
-void movePiece(char piece, int r1, int c1, int r2, int c2);
 int isOpponentPiece(char piece, int r, int c);
 void checkForKingCapture();
 int isValidPosition(int x, int y);
@@ -45,12 +44,12 @@ void displayLogs();
 void displayVictories();
 
 // Funções de peças
-void peao(int r1, int c1, int isWhite);
-void torre(int r1, int c1);
-void cavalo(int r1, int c1);
-void bispo(int r1, int c1);
-void rei(int r1, int c1);
-void dama(int r1, int c1);
+int peao(int r1, int c1, int r2, int c2, int isWhite);
+int torre(int r1, int c1, int r2, int c2);
+int cavalo(int r1, int c1, int r2, int c2);
+int bispo(int r1, int c1, int r2, int c2);
+int rei(int r1, int c1, int r2, int c2);
+int dama(int r1, int c1, int r2, int c2);
 
 int main() {
     menu();
@@ -145,9 +144,11 @@ void displayBoard() {
 
 void logMovement(char piece, int startX, int startY, int endX, int endY) {
     if (logCount < MAX_LOGS) {
-        sprintf(logs[logCount], "Peca: %c | De: (%d, %d) -> Para: (%d, %d)",
+        // Formata e armazena o movimento no vetor de logs
+        snprintf(logs[logCount], LOG_LENGTH,
+            "Peca: %c | De: (%d, %d) -> Para: (%d, %d)",
             piece, startX + 1, startY + 1, endX + 1, endY + 1);
-        logCount++;
+        logCount++;  // Incrementa o contador de logs
     }
     else {
         printf("Limite de logs atingido!\n");
@@ -155,7 +156,8 @@ void logMovement(char piece, int startX, int startY, int endX, int endY) {
 }
 
 
-void logGameEnd() {
+
+void logEndGame() {
     system("cls");  // Limpa a tela
 
     // Exibe o tabuleiro e os logs
@@ -188,7 +190,7 @@ void logGameEnd() {
 
 void displayLogs() {
     system("cls");
-    logGameEnd();
+    logEndGame();
     printf("Pressione qualquer tecla para voltar ao menu...\n");
     _getch();
 }
@@ -208,6 +210,7 @@ void displayVictories() {
 void playerTurn(int player) {
     int r1, c1, r2, c2;
     char piece;
+    int validMove = 0;
 
     // Determina o jogador atual
     if (player == 1) {
@@ -217,84 +220,81 @@ void playerTurn(int player) {
         printf("\nJogador 2 (Pecas Pretas), eh sua vez.\n");
     }
 
-    // Solicita a posição inicial
-    printf("Digite a posicao inicial (linha coluna): ");
-    scanf("%d %d", &r1, &c1);
-    r1 -= 1; // Ajuste para índice do array
-    c1 -= 1;
+    do {
+        // Solicita a posição inicial
+        printf("Digite a posicao inicial (linha coluna): ");
+        scanf("%d %d", &r1, &c1);
+        r1 -= 1; // Ajuste para índice do array
+        c1 -= 1;
 
-    // Verifica validade da posição inicial
-    if (!isValidPosition(r1, c1) || board[r1][c1] == ' ') {
-        printf("Posicao invalida ou sem peca. Tente novamente.\n");
-        _getch();
-        return;
-    }
+        // Verifica validade da posição inicial
+        if (!isValidPosition(r1, c1) || board[r1][c1] == ' ') {
+            printf("Posicao invalida ou sem peca. Tente novamente.\n");
+            continue; // Solicita novamente até ser válida
+        }
 
-    // Identifica a peça na posição inicial
-    piece = board[r1][c1];
+        // Identifica a peça na posição inicial
+        piece = board[r1][c1];
 
-    // Verifica se a peça pertence ao jogador atual
-    if ((player == 1 && (piece < 'a' || piece > 'z')) ||
-        (player == 2 && (piece < 'A' || piece > 'Z'))) {
-        printf("Voce nao pode mover uma peca do adversario. Tente novamente.\n");
-        _getch();
-        return;
-    }
+        // Verifica se a peça pertence ao jogador atual
+        if ((player == 1 && (piece < 'a' || piece > 'z')) ||
+            (player == 2 && (piece < 'A' || piece > 'Z'))) {
+            printf("Voce nao pode mover uma peca do adversario. Tente novamente.\n");
+            continue; // Solicita novamente até ser válida
+        }
 
-    // Chama a função de movimento específica com base na peça
-    switch (piece) {
-    case 'P': case 'p': // Peão
-        peao(r1, c1, (piece == 'p'));
-        break;
-    case 'T': case 't': // Torre
-        torre(r1, c1);
-        break;
-    case 'C': case 'c': // Cavalo
-        cavalo(r1, c1);
-        break;
-    case 'B': case 'b': // Bispo
-        bispo(r1, c1);
-        break;
-    case 'D': case 'd': // Dama
-        dama(r1, c1);
-        break;
-    case 'R': case 'r': // Rei
-        rei(r1, c1);
-        break;
-    default:
-        printf("Peca invalida. Tente novamente.\n");
-        _getch();
-        return;
-    }
-    checkForKingCapture();
+        // Solicita a posição final
+        printf("Digite a posicao final (linha coluna): ");
+        scanf("%d %d", &r2, &c2);
+        r2 -= 1; // Ajuste para índice do array
+        c2 -= 1;
+
+        // Inicializa a variável para validar o movimento
+        validMove = 0;
+
+        // Chama a função de movimento específica com base na peça
+        switch (piece) {
+        case 'P': case 'p': // Peão
+            validMove = peao(r1, c1, r2, c2, (piece == 'p'));
+            break;
+        case 'T': case 't': // Torre
+            validMove = torre(r1, c1, r2, c2);
+            break;
+        case 'C': case 'c': // Cavalo
+            validMove = cavalo(r1, c1, r2, c2);
+            break;
+        case 'B': case 'b': // Bispo
+            validMove = bispo(r1, c1, r2, c2);
+            break;
+        case 'D': case 'd': // Dama
+            validMove = dama(r1, c1, r2, c2);
+            break;
+        case 'R': case 'r': // Rei
+            validMove = rei(r1, c1, r2, c2);
+            break;
+        default:
+            printf("Peca invalida. Tente novamente.\n");
+            continue; // Solicita novamente até ser válida
+        }
+
+        // Se o movimento for válido, sai do loop e registra o movimento
+        if (validMove) {
+            logMovement(piece, r1, c1, r2, c2);
+            checkForKingCapture(); // Verifica captura do rei
+            break; // Sai do loop se o movimento for válido
+        }
+        else {
+            printf("Movimento invalido. Tente novamente.\n");
+        }
+    } while (!validMove); // Repete até o movimento ser válido
 }
+
+
 
 
 int isValidPosition(int x, int y) {
     return x >= 0 && x < 8 && y >= 0 && y < 8;
 }
-
-
-void movePiece(char piece, int r1, int c1, int r2, int c2) {
-    if (board[r2][c2] == ' ') {  // Caso o destino esteja vazio, apenas move a peça
-        changePosition(r1, c1, r2, c2);
-        logMovement(piece, r1, c1, r2, c2);
-    }
-    else if (isOpponentPiece(piece, r2, c2)) {  // Se houver peça adversária no destino, captura a peça
-        printf("Captura de peça: %c\n", board[r2][c2]);
-        changePosition(r1, c1, r2, c2);
-        logMovement(piece, r1, c1, r2, c2);
-    }
-    else {  // Caso contrário, o movimento é inválido
-        printf("Movimento inválido, posição ocupada pela própria peça.\n");
-        _getch();
-        return;  // Não chama checkForKingCapture se o movimento for inválido
-    }
-
-    // Chama checkForKingCapture somente após um movimento/captura válido
-    checkForKingCapture();
-}
-
 
 void checkForKingCapture() {
     // Inicializa como não capturados
@@ -317,14 +317,14 @@ void checkForKingCapture() {
     if (whiteKingCaptured) {
         printf("Jogador 2 (Pecas Pretas) venceu! O Rei Branco foi capturado!\n");
         blackWins += 1;
-        logGameEnd();
+        logEndGame();
         menu();
         exit(0);
     }
     else if (blackKingCaptured) {
         printf("Jogador 1 (Pecas Brancas) venceu! O Rei Preto foi capturado!\n");
         whiteWins += 1;
-        logGameEnd();
+        logEndGame();
         menu();
         exit(0);
     }
@@ -348,36 +348,33 @@ void changePosition(int r1, int c1, int r2, int c2) {
 }
 
 
-void peao(int r1, int c1, int isWhite) {
+int peao(int r1, int c1, int r2, int c2, int isWhite) {
     int direction = isWhite ? 1 : -1; // Branco sobe (-1), preto desce (+1)
     int startRow = isWhite ? 1 : 6;  // Linha inicial dos peões brancos e pretos
-
-    int r2, c2;
-    printf("Digite a posicao de destino (linha coluna): ");
-    scanf("%d %d", &r2, &c2);
-    r2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
-    c2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
 
     // Verifica se o movimento é dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
-        return;
+        return 0;
     }
 
     // Movimento simples para frente (apenas uma casa)
     if (c2 == c1 && r2 == r1 + direction && board[r2][c2] == ' ') {
         changePosition(r1, c1, r2, c2);
+        return 1;
     }
     // Movimento inicial de duas casas (se o peão estiver na linha inicial)
     else if (c2 == c1 && r1 == startRow && r2 == r1 + 2 * direction &&
         board[r2][c2] == ' ' && board[r1 + direction][c1] == ' ') {
         changePosition(r1, c1, r2, c2);
+        return 1;
     }
     // Captura em diagonal (movimento para as casas adjacentes na diagonal)
     else if ((c2 == c1 + 1 || c2 == c1 - 1) && r2 == r1 + direction &&
         isOpponentPiece(board[r1][c1], r2, c2)) {
         changePosition(r1, c1, r2, c2);
+        return 1;
     }
     // Promoção do peão (quando chega na última linha do tabuleiro)
     else if (r2 == (isWhite ? 0 : 7)) {
@@ -387,55 +384,51 @@ void peao(int r1, int c1, int isWhite) {
         escolha = isWhite ? tolower(escolha) : toupper(escolha); // Ajusta a peça para maiúscula ou minúscula
         board[r1][c1] = ' '; // Remove o peão da posição original
         board[r2][c2] = escolha; // Coloca a peça promovida no lugar do peão
+        return 1;
     }
     // Movimento inválido
     else {
         printf("Movimento invalido para o peao.\n");
         _getch();
+        return 0;
     }
 }
 
 
-void torre(int r1, int c1) {
-    int r2, c2;
+
+int torre(int r1, int c1, int r2, int c2) {
     int validMove = 0;
 
-    // Solicita ao jogador as novas coordenadas (r2, c2)
-    printf("Digite a posicao de destino (linha coluna): ");
-    scanf("%d %d", &r2, &c2);
-    r2 -= 1; // Ajusta para indice do array (entrada do usuario e 1-indexed)
-    c2 -= 1; // Ajusta para indice do array (entrada do usuario e 1-indexed)
-
-    // Verifica se o movimento e dentro do tabuleiro
+    // Verifica se o movimento é dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
-        return;
+        return 0;
     }
 
-    // Verifica se a torre esta se movendo na mesma linha ou coluna
+    // Verifica se a torre está se movendo na mesma linha ou coluna
     if (r1 == r2) {
         // Movimento horizontal: percorre as colunas entre c1 e c2
         if (c2 > c1) {
             for (int i = c1 + 1; i < c2; i++) {
-                if (board[r1][i] != ' ') {  // Encontra um obstaculo
-                    printf("Movimento invalido. Ha um obstaculo na posicao (%d, %d).\n", r1 + 1, i + 1);
+                if (board[r1][i] != ' ') { // Encontra um obstáculo
+                    printf("Movimento inválido. Há um obstáculo na posição (%d, %d).\n", r1 + 1, i + 1);
                     _getch();
-                    return;
+                    return 0;
                 }
             }
         }
         else if (c2 < c1) {
             for (int i = c1 - 1; i > c2; i--) {
-                if (board[r1][i] != ' ') {  // Encontra um obstaculo
-                    printf("Movimento invalido. Ha um obstaculo na posicao (%d, %d).\n", r1 + 1, i + 1);
+                if (board[r1][i] != ' ') { // Encontra um obstáculo
+                    printf("Movimento inválido. Há um obstáculo na posição (%d, %d).\n", r1 + 1, i + 1);
                     _getch();
-                    return;
+                    return 0;
                 }
             }
         }
 
-        // Verifica a posicao de destino
+        // Verifica a posição de destino
         if (board[r2][c2] == ' ' || isOpponentPiece(board[r1][c1], r2, c2)) {
             changePosition(r1, c1, r2, c2);
             validMove = 1;
@@ -445,54 +438,51 @@ void torre(int r1, int c1) {
         // Movimento vertical: percorre as linhas entre r1 e r2
         if (r2 > r1) {
             for (int i = r1 + 1; i < r2; i++) {
-                if (board[i][c1] != ' ') {  // Encontra um obstaculo
-                    printf("Movimento invalido. Ha um obstaculo na posicao (%d, %d).\n", i + 1, c1 + 1);
+                if (board[i][c1] != ' ') { // Encontra um obstáculo
+                    printf("Movimento inválido. Há um obstáculo na posição (%d, %d).\n", i + 1, c1 + 1);
                     _getch();
-                    return;
+                    return 0;
                 }
             }
         }
         else if (r2 < r1) {
             for (int i = r1 - 1; i > r2; i--) {
-                if (board[i][c1] != ' ') {  // Encontra um obstaculo
-                    printf("Movimento invalido. Ha um obstaculo na posicao (%d, %d).\n", i + 1, c1 + 1);
+                if (board[i][c1] != ' ') { // Encontra um obstáculo
+                    printf("Movimento inválido. Há um obstáculo na posição (%d, %d).\n", i + 1, c1 + 1);
                     _getch();
-                    return;
+                    return 0;
                 }
             }
         }
 
-        // Verifica a posicao de destino
+        // Verifica a posição de destino
         if (board[r2][c2] == ' ' || isOpponentPiece(board[r1][c1], r2, c2)) {
             changePosition(r1, c1, r2, c2);
             validMove = 1;
         }
     }
 
-    // Se o movimento nao for valido
+    // Se o movimento não for válido
     if (!validMove) {
-        printf("Movimento invalido para a torre.\n");
+        printf("Movimento inválido para a torre.\n");
         _getch();
     }
+
+    return validMove;
 }
 
 
 
-void cavalo(int r1, int c1) {
+
+int cavalo(int r1, int c1, int r2, int c2) {
     // O cavalo se move em forma de "L", 2 casas em uma direção e 1 casa perpendicular a essa
     // Exemplo: (r1+2, c1+1) ou (r1-2, c1-1), etc.
-
-    int r2, c2;
-    printf("Digite a posicao de destino (linha coluna): ");
-    scanf("%d %d", &r2, &c2);
-    r2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
-    c2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
 
     // Verifica se o movimento é dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
-        return;
+        return 0;
     }
 
     // Verifica se o movimento do cavalo é válido (movimento em forma de "L")
@@ -507,7 +497,7 @@ void cavalo(int r1, int c1) {
         int newC = c1 + possibleMoves[i][1];
 
         // Verifica se a posição destino é válida e se o cavalo pode se mover para lá
-        if (newR == r2 && newC == c2 && isValidPosition(r2, c2)) {
+        if (newR == r2 && newC == c2) {
             // Permite mover para uma casa vazia ou capturar uma peça inimiga
             if (board[r2][c2] == ' ' || isOpponentPiece(board[r1][c1], r2, c2)) {
                 changePosition(r1, c1, r2, c2);
@@ -518,33 +508,31 @@ void cavalo(int r1, int c1) {
     }
 
     if (!validMove) {
-        printf("Movimento invalido para o cavalo.\n");
+        printf("Movimento inválido para o cavalo.\n");
         _getch();
     }
+
+    return validMove;
 }
 
 
-void bispo(int r1, int c1) {
+
+int bispo(int r1, int c1, int r2, int c2) {
     // O bispo se move quantas casas quiser, mas somente nas diagonais
     int possibleMoves[4][2] = {
         {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
     };
 
-    int validMove = 0;
-    int r2, c2;
-    printf("Digite a posicao de destino (linha coluna): ");
-    scanf("%d %d", &r2, &c2);
-    r2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
-    c2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
-
     // Verifica se o movimento é dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
-        return;
+        return 0;
     }
 
-    // Verificar se o movimento é válido para o bispo, ou seja, apenas nas diagonais
+    int validMove = 0;
+
+    // Verifica se o movimento é válido para o bispo (somente nas diagonais)
     for (int i = 0; i < 4; i++) {
         int newR = r1;
         int newC = c1;
@@ -556,6 +544,7 @@ void bispo(int r1, int c1) {
 
             // Verifica se atingiu a posição final (r2, c2)
             if (newR == r2 && newC == c2) {
+                // Permite mover para uma casa vazia ou capturar uma peça inimiga
                 if (board[newR][newC] == ' ' || isOpponentPiece(board[r1][c1], newR, newC)) {
                     changePosition(r1, c1, r2, c2);
                     validMove = 1;
@@ -575,86 +564,41 @@ void bispo(int r1, int c1) {
     }
 
     if (!validMove) {
-        printf("Movimento invalido para o bispo.\n");
+        printf("Movimento inválido para o bispo.\n");
         _getch();
     }
+
+    return validMove;
 }
 
 
-void rei(int r1, int c1) {
-    // O rei pode mover-se uma casa em qualquer direção (vertical, horizontal ou diagonal)
-    int possibleMoves[8][2] = {
-        {1, 0}, {-1, 0}, {0, 1}, {0, -1},
-        {1, 1}, {-1, -1}, {1, -1}, {-1, 1}
-    };
+int dama(int r1, int c1, int r2, int c2) {
+    int validMove = 0;
 
-    int r2, c2;
-    printf("Digite a posicao de destino (linha coluna): ");
-    scanf("%d %d", &r2, &c2);
-    r2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
-    c2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
-
-    // Verifica se o movimento é dentro do tabuleiro
+    // Verifica se o movimento está dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
-        return;
+        return 0;  // Retorna 0 se o movimento for inválido
     }
 
-    int validMove = 0;
-    for (int i = 0; i < 8; i++) {
-        int newR = r1 + possibleMoves[i][0];
-        int newC = c1 + possibleMoves[i][1];
-
-        if (newR == r2 && newC == c2) {
-            if (board[newR][newC] == ' ' || isOpponentPiece(board[r1][c1], newR, newC)) {
-                changePosition(r1, c1, newR, newC);
-                validMove = 1;
-                break;
-            }
-        }
-    }
-
-    if (!validMove) {
-        printf("Movimento invalido para o rei.\n");
-        _getch();
-    }
-}
-
-
-void dama(int r1, int c1) {
-    // A rainha se move em qualquer direção, vertical, horizontal e diagonal
-    int validMove = 0;
-    int r2, c2;
-    printf("Digite a posicao de destino (linha coluna): ");
-    scanf("%d %d", &r2, &c2);
-    r2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
-    c2 -= 1; // Ajusta para índice do array (entrada do usuário é 1-indexed)
-
-    // Verifica se o movimento é dentro do tabuleiro
-    if (!isValidPosition(r2, c2)) {
-        printf("Movimento fora do tabuleiro. Tente novamente.\n");
-        _getch();
-        return;
-    }
-
-    // Verifica movimento horizontal
+    // Verifica movimento horizontal (mesma linha)
     if (r1 == r2) {
         if (c1 < c2) { // Movimento para a direita
             for (int i = c1 + 1; i < c2; i++) {
                 if (board[r1][i] != ' ') { // Verifica se há peças no caminho
-                    printf("Ha uma peça no caminho. Movimente-se para outra casa.\n");
+                    printf("Há uma peça no caminho. Movimente-se para outra casa.\n");
                     _getch();
-                    return;
+                    return 0;
                 }
             }
         }
         else { // Movimento para a esquerda
             for (int i = c1 - 1; i > c2; i--) {
                 if (board[r1][i] != ' ') { // Verifica se há peças no caminho
-                    printf("Ha uma peça no caminho. Movimente-se para outra casa.\n");
+                    printf("Há uma peça no caminho. Movimente-se para outra casa.\n");
                     _getch();
-                    return;
+                    return 0;
                 }
             }
         }
@@ -664,23 +608,23 @@ void dama(int r1, int c1) {
             validMove = 1;
         }
     }
-    // Verifica movimento vertical
+    // Verifica movimento vertical (mesma coluna)
     else if (c1 == c2) {
         if (r1 < r2) { // Movimento para baixo
             for (int i = r1 + 1; i < r2; i++) {
                 if (board[i][c1] != ' ') { // Verifica se há peças no caminho
-                    printf("Ha uma peça no caminho. Movimente-se para outra casa.\n");
+                    printf("Há uma peça no caminho. Movimente-se para outra casa.\n");
                     _getch();
-                    return;
+                    return 0;
                 }
             }
         }
         else { // Movimento para cima
             for (int i = r1 - 1; i > r2; i--) {
                 if (board[i][c1] != ' ') { // Verifica se há peças no caminho
-                    printf("Ha uma peça no caminho. Movimente-se para outra casa.\n");
+                    printf("Há uma peça no caminho. Movimente-se para outra casa.\n");
                     _getch();
-                    return;
+                    return 0;
                 }
             }
         }
@@ -698,9 +642,9 @@ void dama(int r1, int c1) {
 
         while (i != r2 && j != c2) {
             if (board[i][j] != ' ') { // Verifica se há peças no caminho
-                printf("Ha uma peça no caminho. Movimente-se para outra casa.\n");
+                printf("Há uma peça no caminho. Movimente-se para outra casa.\n");
                 _getch();
-                return;
+                return 0;
             }
             i += rowDirection;
             j += colDirection;
@@ -713,7 +657,48 @@ void dama(int r1, int c1) {
     }
 
     if (!validMove) {
-        printf("Movimento invalido para a rainha.\n");
+        printf("Movimento inválido para a rainha.\n");
         _getch();
     }
+
+    return validMove;  // Retorna 1 se o movimento for válido, caso contrário retorna 0
+}
+
+
+int rei(int r1, int c1, int r2, int c2) {
+    // O rei pode mover-se uma casa em qualquer direção (vertical, horizontal ou diagonal)
+    int possibleMoves[8][2] = {
+        {1, 0}, {-1, 0}, {0, 1}, {0, -1},
+        {1, 1}, {-1, -1}, {1, -1}, {-1, 1}
+    };
+
+    // Verifica se o movimento é dentro do tabuleiro
+    if (!isValidPosition(r2, c2)) {
+        printf("Movimento fora do tabuleiro. Tente novamente.\n");
+        _getch();
+        return 0;  // Retorna 0 se o movimento for inválido
+    }
+
+    int validMove = 0;
+    for (int i = 0; i < 8; i++) {
+        int newR = r1 + possibleMoves[i][0];
+        int newC = c1 + possibleMoves[i][1];
+
+        // Verifica se a posição de destino é válida para o movimento do rei
+        if (newR == r2 && newC == c2) {
+            // Permite mover para uma casa vazia ou capturar uma peça inimiga
+            if (board[newR][newC] == ' ' || isOpponentPiece(board[r1][c1], newR, newC)) {
+                changePosition(r1, c1, newR, newC);
+                validMove = 1;
+                break;
+            }
+        }
+    }
+
+    if (!validMove) {
+        printf("Movimento inválido para o rei.\n");
+        _getch();
+    }
+
+    return validMove;  // Retorna 1 se o movimento foi válido, caso contrário retorna 0
 }
