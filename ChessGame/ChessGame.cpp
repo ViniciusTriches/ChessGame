@@ -3,46 +3,51 @@
 #include <conio.h>
 #include <cctype>
 
-// Configurações de logs
-#define MAX_LOGS 200
-#define LOG_LENGTH 50
+
+// Variaveis Globais para log
+#define MAX_LOGS 200 // Tamanho maximo de logs (Linhas)
+#define LOG_LENGTH 50 // Tamanho maximo de caracteres por linha 
 char logs[MAX_LOGS][LOG_LENGTH];
 int logCount = 0;
 
+
+// Variaveis de controle
 int whiteKingCaptured = 0;  // Indica se o rei branco foi capturado
 int blackKingCaptured = 0;  // Indica se o rei preto foi capturado
 
-int whiteWins = 0;
-int blackWins = 0;
 
-// Estado do tabuleiro e peões
-char board[8][8] = {
-    { 't', 'c', 'b', 'd', 'r', 'b', 'c', 't' },
-    { 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p' },
-    { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' },
-    { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' },
-    { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' },
-    { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' },
-    { 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P' },
-    { 'T', 'C', 'B', 'D', 'R', 'B', 'C', 'T' }
-};
-int pwstatus[8] = { 0 };
-int pbstatus[8] = { 0 };
+int whiteWins = 0; // Contador de vitoria peças Brancas
+int blackWins = 0; // Contador de vitoria peças Pretas
 
-// Funções principais
-void displayBoard();
-void logMovement(char piece, int startX, int startY, int endX, int endY);
-void logEndGame();
-void changePosition(int r1, int c1, int r2, int c2);
-void playerTurn(int player);
-int isOpponentPiece(char piece, int r, int c);
-void checkForKingCapture();
-int isValidPosition(int x, int y);
+
+// Variavel do controle
+char board[8][8];
+
+
+//Funções Principais
 void menu();
 void mainGame();
-void resetBoard();
+void playerTurn(int player);
+
+
+// Funções de Display e Board
+void displayBoard();
 void displayLogs();
 void displayVictories();
+void resetBoard();
+
+
+// Funções de Mecanicas de jogo
+void checkForKingCapture();
+int isOpponentPiece(char piece, int r, int c);
+int isValidPosition(int x, int y);
+void changePosition(int r1, int c1, int r2, int c2);
+
+
+// Funções de controle de log
+void logMovement(char piece, int startX, int startY, int endX, int endY);
+void logEndGame();
+
 
 // Funções de peças
 int peao(int r1, int c1, int r2, int c2, int isWhite);
@@ -52,10 +57,12 @@ int bispo(int r1, int c1, int r2, int c2);
 int rei(int r1, int c1, int r2, int c2);
 int dama(int r1, int c1, int r2, int c2);
 
+
 int main() {
     menu();
     return 0;
 }
+
 
 void menu() {
     int choice;
@@ -71,14 +78,14 @@ void menu() {
 
         switch (choice) {
         case 1:
-            resetBoard();
-            mainGame();
+            resetBoard(); // Reset/Montagem do Tabuleiro
+            mainGame(); // Função principal do Jogo
             break;
         case 2:
-            displayVictories();
+            displayVictories(); // Tela de contagem das vitorias
             break;
         case 3:
-            displayLogs();
+            displayLogs(); // Tela de Log Eng game (Tabuleiro da Partida + Vencedor + Movimentos)
             break;
         case 4:
             printf("Saindo...\n");
@@ -89,6 +96,8 @@ void menu() {
     } while (choice != 4);
 }
 
+
+// Função Principal da Jogo
 void mainGame() {
     int round = 0;
     while (1) {
@@ -99,6 +108,8 @@ void mainGame() {
     }
 }
 
+
+// Função de Reset/Montagem do tabuleiro
 void resetBoard() {
     // Inicializa o tabuleiro com espaços vazios
     for (int i = 0; i < 8; i++) {
@@ -107,7 +118,7 @@ void resetBoard() {
         }
     }
 
-    // Configura as peças brancas (minúsculas) no topo
+    // Configura as peças brancas (minúsculas) no topo do tabuleiro
     board[0][0] = board[0][7] = 't'; // Torres
     board[0][1] = board[0][6] = 'c'; // Cavalos
     board[0][2] = board[0][5] = 'b'; // Bispos
@@ -117,7 +128,7 @@ void resetBoard() {
         board[1][j] = 'p';           // Peões
     }
 
-    // Configura as peças pretas (maiúsculas) na base
+    // Configura as peças pretas (maiúsculas e Amarelas) na base do tabuleiro
     board[7][0] = board[7][7] = 'T'; // Torres
     board[7][1] = board[7][6] = 'C'; // Cavalos
     board[7][2] = board[7][5] = 'B'; // Bispos
@@ -133,19 +144,17 @@ void resetBoard() {
 
     // Reseta os logs
     logCount = 0;
-
 }
 
 
-
+// Função da tela de jogo
 void displayBoard() {
-    // Título do tabuleiro
     printf("\n---------Xadrez----------\n");
 
     // Exibição do tabuleiro
-    printf("\n"); // Linha inicial para separação visual
-    for (int r = 7; r >= 0; r--) { // Exibe as linhas de cima para baixo
-        printf(" %d ", r + 1); // Numeração das linhas à esquerda
+    printf("\n");
+    for (int r = 7; r >= 0; r--) {
+        printf(" %d ", r + 1);
         for (int c = 0; c < 8; c++) {
             printf("|");
 
@@ -157,16 +166,16 @@ void displayBoard() {
                 printf("\033[37m%c\033[0m", piece);  // Branco
             }
             else {
-                printf("%c", piece);  // Espaços vazios
+                printf("%c", piece);
             }
         }
-        printf("|\n"); // Fecha a linha
+        printf("|\n");
     }
 
     // Cabeçalho das colunas
-    printf("    "); // Espaço antes do cabeçalho das colunas
+    printf("    ");
     for (int i = 0; i < 8; i++) {
-        printf("%d ", i + 1); // Numeração das colunas na parte inferior
+        printf("%d ", i + 1);
     }
     printf("\n");
 
@@ -175,20 +184,18 @@ void displayBoard() {
     printf("  Pecas \033[33mAmarelas\033[0m: Pretas (maiusculas)\n");
     printf("  Pecas \033[37mBrancas\033[0m: Brancas (minusculas)\n");
 
-    // Divisão final
     printf("\n--------------------------\n");
 }
 
 
-
-
+// Função para montar e armazenar log de movimentos
 void logMovement(char piece, int startX, int startY, int endX, int endY) {
     if (logCount < MAX_LOGS) {
         // Formata e armazena o movimento no vetor de logs
         snprintf(logs[logCount], LOG_LENGTH,
             "Peca: %c | De: (%d, %d) -> Para: (%d, %d)",
             piece, startX + 1, startY + 1, endX + 1, endY + 1);
-        logCount++;  // Incrementa o contador de logs
+        logCount++;
     }
     else {
         printf("Limite de logs atingido!\n");
@@ -196,13 +203,13 @@ void logMovement(char piece, int startX, int startY, int endX, int endY) {
 }
 
 
-
+// Monta e imprime tela de final de end game (Tabuleiro da Partida + Vencedor + Movimentos)
 void logEndGame() {
     system("cls");  // Limpa a tela
 
-    // Exibe o tabuleiro e os logs
+    // Tabuleiro da partida
     printf("======== Jogo Finalizado ========\n");
-    displayBoard();  // Exibe o tabuleiro atual
+    displayBoard();
 
     // Verifica quem é o vencedor e exibe a mensagem
     if (whiteKingCaptured) {
@@ -224,7 +231,7 @@ void logEndGame() {
 
     // Solicita ao usuário se deseja salvar os logs em um arquivo
     char choice;
-    printf("\nDeseja salvar os logs em um arquivo txt? (S/N): ");
+    printf("\nDeseja exportar os logs em um arquivo txt? (S/N): ");
     scanf(" %c", &choice);
 
     if (choice == 'S' || choice == 's') {
@@ -274,7 +281,7 @@ void logEndGame() {
 }
 
 
-
+// Função para imprimir o log de final de jogo
 void displayLogs() {
     system("cls");
     logEndGame();
@@ -282,18 +289,21 @@ void displayLogs() {
     _getch();
 }
 
+
+//Função que imprimi o numero de vitorias de cada jogador
 void displayVictories() {
-    system("cls");  // Limpa a tela para exibir apenas as informações necessárias
+    system("cls");
 
     printf("======== Numero de Vitorias ========\n\n");
     printf("Jogador 1 (Pecas Brancas): %d vitoria(s)\n", whiteWins);
     printf("Jogador 2 (Pecas Pretas): %d vitoria(s)\n", blackWins);
 
     printf("\nPressione qualquer tecla para voltar ao menu...\n");
-    _getch();  // Aguarda o usuário pressionar uma tecla antes de retornar
+    _getch();
 }
 
 
+// Função que organiza turnos e captura posição inicial e final das jogadas
 void playerTurn(int player) {
     int r1, c1, r2, c2;
     char piece;
@@ -311,32 +321,31 @@ void playerTurn(int player) {
         // Solicita a posição inicial
         printf("Digite a posicao inicial (linha coluna): ");
         scanf("%d %d", &r1, &c1);
-        r1 -= 1; // Ajuste para índice do array
-        c1 -= 1;
+        r1 -= 1; // Ajuste para índice do vetor
+        c1 -= 1; // Ajuste para índice do vetor
 
-        // Verifica validade da posição inicial
+        // Verifica se posição inicial é valida
         if (!isValidPosition(r1, c1) || board[r1][c1] == ' ') {
             printf("Posicao invalida ou sem peca. Tente novamente.\n");
             continue; // Solicita novamente até ser válida
         }
 
-        // Identifica a peça na posição inicial
+        // Identifica qual peça na posição inicial
         piece = board[r1][c1];
 
         // Verifica se a peça pertence ao jogador atual
         if ((player == 1 && (piece < 'a' || piece > 'z')) ||
             (player == 2 && (piece < 'A' || piece > 'Z'))) {
             printf("Voce nao pode mover uma peca do adversario. Tente novamente.\n");
-            continue; // Solicita novamente até ser válida
+            continue;
         }
 
         // Solicita a posição final
         printf("Digite a posicao final (linha coluna): ");
         scanf("%d %d", &r2, &c2);
-        r2 -= 1; // Ajuste para índice do array
-        c2 -= 1;
+        r2 -= 1; // Ajuste para índice do vetor
+        c2 -= 1; // Ajuste para índice do vetor
 
-        // Inicializa a variável para validar o movimento
         validMove = 0;
 
         // Chama a função de movimento específica com base na peça
@@ -361,25 +370,26 @@ void playerTurn(int player) {
             break;
         default:
             printf("Peca invalida. Tente novamente.\n");
-            continue; // Solicita novamente até ser válida
+            continue;
         }
 
         // Se o movimento for válido, sai do loop e registra o movimento
         if (validMove) {
             logMovement(piece, r1, c1, r2, c2);
-            checkForKingCapture(); // Verifica captura do rei
-            break; // Sai do loop se o movimento for válido
+            checkForKingCapture(); // Verifica se houve captura do rei
+            break;
         }
     } while (!validMove); // Repete até o movimento ser válido
 }
 
 
-
-
+// Função para validar se movimento está dentro do tabuleiro
 int isValidPosition(int x, int y) {
     return x >= 0 && x < 8 && y >= 0 && y < 8;
 }
 
+
+// Função para validar captura do rei e final da partida
 void checkForKingCapture() {
     // Inicializa como não capturados
     whiteKingCaptured = 1; // Assume-se que o rei branco está capturado até ser encontrado
@@ -397,7 +407,7 @@ void checkForKingCapture() {
         }
     }
 
-    // Condições para verificar a captura de reis
+    // Imprime vencedor e finaliza partida caso um dos reis tenha sido capturado
     if (whiteKingCaptured) {
         printf("Jogador 2 (Pecas Pretas) venceu! O Rei Branco foi capturado!\n");
         blackWins += 1;
@@ -415,25 +425,29 @@ void checkForKingCapture() {
 }
 
 
+// Função verifica se é peça é do jogador correspondente
 int isOpponentPiece(char piece, int r, int c) {
     // Verifica se a peça é do jogador adversário
     if (piece >= 'a' && piece <= 'z') {  // Peças brancas são minúsculas
-        return board[r][c] >= 'A' && board[r][c] <= 'Z';  // Se for maiúscula, é uma peça preta
+        return board[r][c] >= 'A' && board[r][c] <= 'Z';
     }
     else if (piece >= 'A' && piece <= 'Z') {  // Peças pretas são maiúsculas
-        return board[r][c] >= 'a' && board[r][c] <= 'z';  // Se for minúscula, é uma peça branca
+        return board[r][c] >= 'a' && board[r][c] <= 'z';
     }
     return 0;  // Não é uma peça adversária
 }
 
+
+// Funçaõ de troca de posição
 void changePosition(int r1, int c1, int r2, int c2) {
     board[r2][c2] = board[r1][c1];
     board[r1][c1] = ' ';
 }
 
 
+// Função do peao e suas especificidades
 int peao(int r1, int c1, int r2, int c2, int isWhite) {
-    int direction = isWhite ? 1 : -1; // Branco sobe (-1), preto desce (+1)
+    int direction = isWhite ? 1 : -1; // Branco sobe (+1), preto desce (-1)
     int startRow = isWhite ? 1 : 6;   // Linha inicial dos peões brancos e pretos
     int finalRow = isWhite ? 7 : 0;   // Linha final para promoção
 
@@ -465,10 +479,10 @@ int peao(int r1, int c1, int r2, int c2, int isWhite) {
         return 0;
     }
 
-    // Verifica promoção do peão (atingiu a última linha)
+    // Verifica promoção do peão ao atingiu a última linha (finalRow)
     if (r2 == finalRow) {
         char escolha;
-        printf("Parabens! Seu peao foi promovido. Escolha uma peça (D: Dama, T: Torre, B: Bispo, C: Cavalo): ");
+        printf("Parabens! Seu peao foi promovido. Escolha uma peca (D: Dama, T: Torre, B: Bispo, C: Cavalo): ");
         scanf(" %c", &escolha);
         escolha = isWhite ? tolower(escolha) : toupper(escolha); // Ajusta a peça para maiúscula ou minúscula
         board[r2][c2] = escolha; // Substitui o peão pela peça promovida
@@ -478,12 +492,10 @@ int peao(int r1, int c1, int r2, int c2, int isWhite) {
 }
 
 
-
-
+// Função do torre e suas especificidades
 int torre(int r1, int c1, int r2, int c2) {
     int validMove = 0;
 
-    // Verifica se o movimento é dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
@@ -556,13 +568,9 @@ int torre(int r1, int c1, int r2, int c2) {
 }
 
 
-
-
+// Função do cavalo e suas especificidades
 int cavalo(int r1, int c1, int r2, int c2) {
-    // O cavalo se move em forma de "L", 2 casas em uma direção e 1 casa perpendicular a essa
-    // Exemplo: (r1+2, c1+1) ou (r1-2, c1-1), etc.
 
-    // Verifica se o movimento é dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
@@ -600,14 +608,12 @@ int cavalo(int r1, int c1, int r2, int c2) {
 }
 
 
-
+// Função do bispo e suas especificidades
 int bispo(int r1, int c1, int r2, int c2) {
-    // O bispo se move quantas casas quiser, mas somente nas diagonais
     int possibleMoves[4][2] = {
         {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
     };
 
-    // Verifica se o movimento é dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
@@ -657,10 +663,10 @@ int bispo(int r1, int c1, int r2, int c2) {
 }
 
 
+// Função do Dama e suas especificidades
 int dama(int r1, int c1, int r2, int c2) {
     int validMove = 0;
 
-    // Verifica se o movimento está dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
@@ -746,22 +752,21 @@ int dama(int r1, int c1, int r2, int c2) {
         _getch();
     }
 
-    return validMove;  // Retorna 1 se o movimento for válido, caso contrário retorna 0
+    return validMove;
 }
 
 
+// Função do Rei e suas especificidades
 int rei(int r1, int c1, int r2, int c2) {
-    // O rei pode mover-se uma casa em qualquer direção (vertical, horizontal ou diagonal)
     int possibleMoves[8][2] = {
         {1, 0}, {-1, 0}, {0, 1}, {0, -1},
         {1, 1}, {-1, -1}, {1, -1}, {-1, 1}
     };
 
-    // Verifica se o movimento é dentro do tabuleiro
     if (!isValidPosition(r2, c2)) {
         printf("Movimento fora do tabuleiro. Tente novamente.\n");
         _getch();
-        return 0;  // Retorna 0 se o movimento for inválido
+        return 0;
     }
 
     int validMove = 0;
@@ -785,5 +790,5 @@ int rei(int r1, int c1, int r2, int c2) {
         _getch();
     }
 
-    return validMove;  // Retorna 1 se o movimento foi válido, caso contrário retorna 0
+    return validMove;
 }
